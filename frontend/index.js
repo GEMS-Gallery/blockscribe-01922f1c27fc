@@ -84,9 +84,15 @@ async function displayPosts() {
       e.preventDefault();
       const postIndex = e.target.querySelector('button').dataset.postIndex;
       const author = e.target.querySelector('input').value;
-      const content = commentQuills[postIndex].root.innerHTML;
-      await backend.addComment(Number(postIndex), author, content);
-      await displayPosts();
+      const quillInstance = commentQuills[postIndex];
+      
+      if (quillInstance && quillInstance.root) {
+        const content = quillInstance.root.innerHTML;
+        await backend.addComment(Number(postIndex), author, content);
+        await displayPosts();
+      } else {
+        console.error('Quill editor not initialized for this comment');
+      }
     });
   });
 }
