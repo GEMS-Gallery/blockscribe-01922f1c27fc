@@ -5,6 +5,7 @@ body {
     max-width: 800px;
     margin: 0 auto;
     padding: 20px;
+    background-color: #f0f0f0;
 }
 
 header {
@@ -12,29 +13,37 @@ header {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 30px;
+    background-color: #0a2540;
+    padding: 20px;
+    border-radius: 5px;
 }
 
 h1 {
     font-size: 2.5em;
     margin: 0;
+    color: #ffffff;
 }
 
 button {
-    background-color: #1a8917;
+    background-color: #29abe2;
     color: white;
     border: none;
     padding: 10px 20px;
     font-size: 1em;
     cursor: pointer;
     transition: background-color 0.3s;
+    border-radius: 5px;
 }
 
 button:hover {
-    background-color: #0f6e0c;
+    background-color: #1c8aaf;
 }
 
 #newPostForm {
     margin-bottom: 30px;
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 5px;
 }
 
 #postForm input,
@@ -46,17 +55,22 @@ button:hover {
 #postForm input {
     padding: 10px;
     font-size: 1em;
+    border: 1px solid #ddd;
+    border-radius: 5px;
 }
 
 article {
-    border-bottom: 1px solid #e6e6e6;
-    padding-bottom: 20px;
+    background-color: #ffffff;
+    border-radius: 5px;
+    padding: 20px;
     margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 article h2 {
     font-size: 1.8em;
     margin-bottom: 5px;
+    color: #0a2540;
 }
 
 .author {
@@ -76,4 +90,34 @@ article h2 {
 
 .ql-editor {
     min-height: 200px;
+}
+
+.comments {
+    margin-top: 20px;
+    border-top: 1px solid #e6e6e6;
+    padding-top: 20px;
+}
+
+.comment {
+    background-color: #f9f9f9;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+}
+
+.comment-form {
+    margin-top: 20px;
+}
+
+.comment-form input,
+.comment-form textarea {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+.comment-form textarea {
+    height: 100px;
 }

@@ -2,10 +2,19 @@ type Post =
  record {
    author: text;
    body: text;
+   comments: vec Comment;
    timestamp: int;
    title: text;
  };
+type Comment = 
+ record {
+   author: text;
+   content: text;
+   timestamp: int;
+ };
 service : {
+  addComment: (nat, text, text) -> ();
   addPost: (text, text, text) -> ();
   getPosts: () -> (vec Post) query;
+  init: () -> ();
 }
