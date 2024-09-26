@@ -59,23 +59,28 @@ async function displayPosts() {
       <form class="comment-form">
         <input type="text" placeholder="Your name" required>
         <div class="comment-editor" id="comment-editor-${index}"></div>
-        <button type="submit" data-post-index="${index}">Add Comment</button>
+        <button type="submit" data-post-index="${index}" disabled>Add Comment</button>
       </form>
     `;
     postsSection.appendChild(article);
 
     // Initialize Quill editor for this comment
-    commentQuills[index] = new Quill(`#comment-editor-${index}`, {
-      theme: 'snow',
-      placeholder: 'Write your comment...',
-      modules: {
-        toolbar: [
-          ['bold', 'italic', 'underline'],
-          ['link', 'blockquote'],
-          [{ list: 'ordered' }, { list: 'bullet' }]
-        ]
-      }
-    });
+    setTimeout(() => {
+      commentQuills[index] = new Quill(`#comment-editor-${index}`, {
+        theme: 'snow',
+        placeholder: 'Write your comment...',
+        modules: {
+          toolbar: [
+            ['bold', 'italic', 'underline'],
+            ['link', 'blockquote'],
+            [{ list: 'ordered' }, { list: 'bullet' }]
+          ]
+        }
+      });
+      // Enable the submit button once Quill is initialized
+      const submitButton = article.querySelector('button[type="submit"]');
+      submitButton.disabled = false;
+    }, 100); // Small delay to ensure DOM is ready
   });
 
   // Add event listeners for comment forms
@@ -88,10 +93,16 @@ async function displayPosts() {
       
       if (quillInstance && quillInstance.root) {
         const content = quillInstance.root.innerHTML;
-        await backend.addComment(Number(postIndex), author, content);
-        await displayPosts();
+        try {
+          await backend.addComment(Number(postIndex), author, content);
+          await displayPosts();
+        } catch (error) {
+          console.error('Error adding comment:', error);
+          alert('Failed to add comment. Please try again.');
+        }
       } else {
         console.error('Quill editor not initialized for this comment');
+        alert('Comment editor is not ready. Please try again in a moment.');
       }
     });
   });
