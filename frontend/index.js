@@ -1,6 +1,7 @@
 import { backend } from 'declarations/backend';
 
 let quill;
+let commentQuills = {};
 
 document.addEventListener('DOMContentLoaded', async () => {
   quill = new Quill('#editor', {
@@ -49,18 +50,32 @@ async function displayPosts() {
         <h3>Comments</h3>
         ${post.comments.map(comment => `
           <div class="comment">
-            <p><strong>${comment.author}</strong>: ${comment.content}</p>
+            <p><strong>${comment.author}</strong>:</p>
+            <div>${comment.content}</div>
             <p class="timestamp">${new Date(Number(comment.timestamp) / 1000000).toLocaleString()}</p>
           </div>
         `).join('')}
       </div>
       <form class="comment-form">
         <input type="text" placeholder="Your name" required>
-        <textarea placeholder="Your comment" required></textarea>
+        <div class="comment-editor" id="comment-editor-${index}"></div>
         <button type="submit" data-post-index="${index}">Add Comment</button>
       </form>
     `;
     postsSection.appendChild(article);
+
+    // Initialize Quill editor for this comment
+    commentQuills[index] = new Quill(`#comment-editor-${index}`, {
+      theme: 'snow',
+      placeholder: 'Write your comment...',
+      modules: {
+        toolbar: [
+          ['bold', 'italic', 'underline'],
+          ['link', 'blockquote'],
+          [{ list: 'ordered' }, { list: 'bullet' }]
+        ]
+      }
+    });
   });
 
   // Add event listeners for comment forms
@@ -69,7 +84,7 @@ async function displayPosts() {
       e.preventDefault();
       const postIndex = e.target.querySelector('button').dataset.postIndex;
       const author = e.target.querySelector('input').value;
-      const content = e.target.querySelector('textarea').value;
+      const content = commentQuills[postIndex].root.innerHTML;
       await backend.addComment(Number(postIndex), author, content);
       await displayPosts();
     });

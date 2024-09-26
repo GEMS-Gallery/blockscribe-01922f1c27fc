@@ -47,12 +47,15 @@ button:hover {
 }
 
 #postForm input,
-#postForm #editor {
+#postForm #editor,
+.comment-form input,
+.comment-form .comment-editor {
     width: 100%;
     margin-bottom: 15px;
 }
 
-#postForm input {
+#postForm input,
+.comment-form input {
     padding: 10px;
     font-size: 1em;
     border: 1px solid #ddd;
@@ -109,15 +112,17 @@ article h2 {
     margin-top: 20px;
 }
 
-.comment-form input,
-.comment-form textarea {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 10px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
+.comment-form .ql-editor {
+    min-height: 100px;
 }
 
-.comment-form textarea {
-    height: 100px;
+.comment-form .ql-container {
+    border-bottom-left-radius: 0.5em;
+    border-bottom-right-radius: 0.5em;
+    background: #fefcfc;
+}
+
+.comment-form .ql-toolbar {
+    border-top-left-radius: 0.5em;
+    border-top-right-radius: 0.5em;
 }

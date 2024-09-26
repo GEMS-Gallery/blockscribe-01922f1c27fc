@@ -46,26 +46,28 @@ actor {
   public func addComment(postIndex: Nat, author: Text, content: Text) : async () {
     let postArray = List.toArray(posts);
     if (postIndex < postArray.size()) {
-      let post = postArray[postIndex];
       let newComment : Comment = {
         author = author;
         content = content;
         timestamp = Time.now();
       };
-      let updatedPost : Post = {
-        title = post.title;
-        body = post.body;
-        author = post.author;
-        timestamp = post.timestamp;
-        comments = Array.append(post.comments, [newComment]);
-      };
-      posts := List.fromArray(Array.mapEntries(postArray, func(p: Post, i: Nat) : Post {
-        if (i == postIndex) { updatedPost } else { p }
-      }));
+      let updatedArray = Array.map<Post, Post>(postArray, func(p: Post) : Post {
+        if (p == postArray[postIndex]) {
+          {
+            title = p.title;
+            body = p.body;
+            author = p.author;
+            timestamp = p.timestamp;
+            comments = Array.append(p.comments, [newComment]);
+          }
+        } else {
+          p
+        }
+      });
+      posts := List.fromArray(updatedArray);
     };
   };
 
-  // Initialize with 6 pre-defined blog posts
   public func init() : async () {
     if (List.isNil(posts)) {
       await addPost("Welcome to My Internet Computer Protocol Blog", "Hello and welcome to my blog dedicated to the Internet Computer Protocol and DFINITY. Here, we'll explore the revolutionary technology behind ICP and its potential to reshape the internet as we know it.", "Dominic Williams");
