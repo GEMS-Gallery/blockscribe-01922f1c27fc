@@ -2,6 +2,7 @@ import { backend } from 'declarations/backend';
 
 let quill;
 let commentQuills = {};
+let quillInitPromises = {};
 
 document.addEventListener('DOMContentLoaded', async () => {
   quill = new Quill('#editor', {
@@ -65,7 +66,7 @@ async function displayPosts() {
     postsSection.appendChild(article);
 
     // Initialize Quill editor for this comment
-    setTimeout(() => {
+    quillInitPromises[index] = new Promise((resolve) => {
       commentQuills[index] = new Quill(`#comment-editor-${index}`, {
         theme: 'snow',
         placeholder: 'Write your comment...',
@@ -80,7 +81,8 @@ async function displayPosts() {
       // Enable the submit button once Quill is initialized
       const submitButton = article.querySelector('button[type="submit"]');
       submitButton.disabled = false;
-    }, 100); // Small delay to ensure DOM is ready
+      resolve();
+    });
   });
 
   // Add event listeners for comment forms
@@ -89,20 +91,30 @@ async function displayPosts() {
       e.preventDefault();
       const postIndex = e.target.querySelector('button').dataset.postIndex;
       const author = e.target.querySelector('input').value;
-      const quillInstance = commentQuills[postIndex];
       
-      if (quillInstance && quillInstance.root) {
-        const content = quillInstance.root.innerHTML;
-        try {
+      try {
+        // Wait for Quill to be initialized
+        await quillInitPromises[postIndex];
+        const quillInstance = commentQuills[postIndex];
+        
+        if (quillInstance && quillInstance.root) {
+          const content = quillInstance.root.innerHTML;
+          const submitButton = e.target.querySelector('button');
+          submitButton.disabled = true;
+          submitButton.textContent = 'Submitting...';
+          
           await backend.addComment(Number(postIndex), author, content);
           await displayPosts();
-        } catch (error) {
-          console.error('Error adding comment:', error);
-          alert('Failed to add comment. Please try again.');
+        } else {
+          throw new Error('Quill editor not properly initialized');
         }
-      } else {
-        console.error('Quill editor not initialized for this comment');
-        alert('Comment editor is not ready. Please try again in a moment.');
+      } catch (error) {
+        console.error('Error adding comment:', error);
+        alert('Failed to add comment. Please try again.');
+      } finally {
+        const submitButton = e.target.querySelector('button');
+        submitButton.disabled = false;
+        submitButton.textContent = 'Add Comment';
       }
     });
   });
