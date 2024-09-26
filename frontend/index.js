@@ -1,8 +1,7 @@
 import { backend } from 'declarations/backend';
 
 let quill;
-let commentQuills = {};
-let quillInitPromises = {};
+let commentQuills = new Map();
 
 function debounce(func, wait) {
   let timeout;
@@ -52,15 +51,13 @@ const debouncedDisplayPosts = debounce(displayPosts, 300);
 async function displayPosts() {
   const posts = await backend.getPosts();
   const postsSection = document.getElementById('posts');
+  postsSection.innerHTML = ''; // Clear existing content
   
-  posts.forEach((post, index) => {
-    let articleElement = postsSection.querySelector(`article[data-post-index="${index}"]`);
-    if (!articleElement) {
-      articleElement = document.createElement('article');
-      articleElement.setAttribute('data-post-index', index);
-      postsSection.appendChild(articleElement);
-    }
-
+  for (let index = 0; index < posts.length; index++) {
+    const post = posts[index];
+    const articleElement = document.createElement('article');
+    articleElement.setAttribute('data-post-index', index);
+    
     articleElement.innerHTML = `
       <h2>${post.title}</h2>
       <p class="author">By ${post.author}</p>
@@ -82,19 +79,17 @@ async function displayPosts() {
         <button type="submit" data-post-index="${index}">Add Comment</button>
       </form>
     `;
+    
+    postsSection.appendChild(articleElement);
+  }
 
-    initializeOrUpdateQuill(index);
-  });
+  // Wait for the DOM to update
+  await new Promise(resolve => setTimeout(resolve, 0));
 
-  // Remove any articles that are no longer needed
-  Array.from(postsSection.children).forEach(child => {
-    const index = child.getAttribute('data-post-index');
-    if (!posts[index]) {
-      postsSection.removeChild(child);
-      delete commentQuills[index];
-      delete quillInitPromises[index];
-    }
-  });
+  // Initialize Quill editors
+  for (let index = 0; index < posts.length; index++) {
+    initializeQuill(index);
+  }
 
   // Add event listeners for comment forms
   document.querySelectorAll('.comment-form').forEach(form => {
@@ -103,37 +98,38 @@ async function displayPosts() {
   });
 }
 
-function initializeOrUpdateQuill(index) {
-  if (!commentQuills[index]) {
-    quillInitPromises[index] = new Promise((resolve) => {
-      commentQuills[index] = new Quill(`#comment-editor-${index}`, {
-        theme: 'snow',
-        placeholder: 'Write your comment...',
-        modules: {
-          toolbar: [
-            ['bold', 'italic', 'underline'],
-            ['link', 'blockquote'],
-            [{ list: 'ordered' }, { list: 'bullet' }]
-          ]
-        }
-      });
-      resolve();
+function initializeQuill(index) {
+  const editorElement = document.querySelector(`#comment-editor-${index}`);
+  if (editorElement) {
+    if (commentQuills.has(index)) {
+      commentQuills.get(index).destroy();
+    }
+    const quillInstance = new Quill(editorElement, {
+      theme: 'snow',
+      placeholder: 'Write your comment...',
+      modules: {
+        toolbar: [
+          ['bold', 'italic', 'underline'],
+          ['link', 'blockquote'],
+          [{ list: 'ordered' }, { list: 'bullet' }]
+        ]
+      }
     });
+    commentQuills.set(index, quillInstance);
+    console.log(`Quill initialized for index ${index}:`, quillInstance);
   } else {
-    // If Quill instance already exists, just update its container
-    commentQuills[index].container = document.querySelector(`#comment-editor-${index}`);
+    console.error(`Editor element not found for index ${index}`);
   }
 }
 
 async function handleCommentSubmit(e) {
   e.preventDefault();
-  const postIndex = e.target.querySelector('button').dataset.postIndex;
+  const postIndex = parseInt(e.target.querySelector('button').dataset.postIndex, 10);
   const author = e.target.querySelector('input').value;
   
   try {
-    // Wait for Quill to be initialized
-    await quillInitPromises[postIndex];
-    const quillInstance = commentQuills[postIndex];
+    const quillInstance = commentQuills.get(postIndex);
+    console.log(`Quill instance for index ${postIndex}:`, quillInstance);
     
     if (quillInstance && quillInstance.root) {
       const content = quillInstance.root.innerHTML;
@@ -141,10 +137,10 @@ async function handleCommentSubmit(e) {
       submitButton.disabled = true;
       submitButton.textContent = 'Submitting...';
       
-      await backend.addComment(Number(postIndex), author, content);
+      await backend.addComment(postIndex, author, content);
       await debouncedDisplayPosts();
     } else {
-      console.error('Quill instance or root not found:', quillInstance);
+      console.error('Quill instance or root not found for index:', postIndex);
       throw new Error('Quill editor not properly initialized');
     }
   } catch (error) {
